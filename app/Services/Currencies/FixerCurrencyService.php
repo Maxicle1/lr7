@@ -20,13 +20,26 @@ class FixerCurrencyService implements CurrencyContract
     {
         $access_key = config("currency.fixer.api_key");
         $base_url = config("currency.fixer.base_url");
-        // Initialize CURL:
-        $ch = curl_init($base_url . $endpoint . '?access_key=' . $access_key . '');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // Store the data:
-        $json = curl_exec($ch);
-        curl_close($ch);
-        // Decode JSON response:
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+        CURLOPT_URL => "".$base_url."".$endpoint."",
+        CURLOPT_HTTPHEADER => array(
+            "Content-Type: text/plain",
+            "apikey: ".$access_key
+        ),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "GET"
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
         return json_decode($json, true);
     }
 
@@ -35,7 +48,9 @@ class FixerCurrencyService implements CurrencyContract
      */
     public function convert(string $from, string $to, float $sum): float
     {
-        return $sum;
+        $data = $this->callApi("convert?to".$to."&from=".$from."&amount".$sum);
+        $result=$data['result'];
+        return $result;
     }
 
     /**
